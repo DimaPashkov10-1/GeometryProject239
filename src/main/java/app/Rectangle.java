@@ -56,8 +56,8 @@ public class Rectangle {
     @JsonIgnore
     public int getColor() {
         return switch (rectSet) {
-            case FIRST_SET -> Misc.getColor(0xCC, 0x00, 0x00, 0xFF);
-            case SECOND_SET -> Misc.getColor(0xCC, 0x00, 0xFF, 0x0);
+            case FIRST_SET -> Misc.getColor(0xCC, 0xFF, 0xFF, 0x00);
+            case SECOND_SET -> Misc.getColor(0xCC, 0x00, 0xFF, 0xFF);
         };
     }
 

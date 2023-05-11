@@ -35,6 +35,14 @@ public class Task {
             и не лежат ни в одном прямоугольнике второго множества.
             Отобразить найденное множество""";
     /**
+     * Счетчики кликов
+     */
+    private int LMBcount = 0;
+    private int RMBcount = 0;
+
+    private Vector2d LMBtemp = null;
+    private Vector2d RMBtemp = null;
+    /**
      * коэффициент колёсика мыши
      */
     private static final float WHEEL_SENSITIVE = 0.001f;
@@ -206,13 +214,22 @@ public class Task {
         if (lastWindowCS == null) return;
         // получаем положение на экране
         Vector2d taskPos = ownCS.getCoords(pos, lastWindowCS);
-        /*// если левая кнопка мыши, добавляем в первое множество
+        // если левая кнопка мыши, добавляем в первое множество
         if (mouseButton.equals(MouseButton.PRIMARY)) {
-            addPoint(taskPos, Point.PointSet.FIRST_SET);
+            LMBcount++;
+            if (LMBcount % 2 != 0){
+                LMBtemp = taskPos;
+            }
+            else addRect(LMBtemp, taskPos, Rectangle.RectSet.FIRST_SET);
             // если правая, то во второе
         } else if (mouseButton.equals(MouseButton.SECONDARY)) {
-            addPoint(taskPos, Point.PointSet.SECOND_SET);
-        }*/
+            RMBcount++;
+            if (RMBcount % 2 != 0){
+                RMBtemp = taskPos;
+            }
+            else addRect(RMBtemp, taskPos, Rectangle.RectSet.SECOND_SET);
+            // если правая, то во второе
+        }
     }
     /**
      * Добавить случайные точки
