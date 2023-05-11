@@ -1,6 +1,7 @@
 package panels;
 
 import app.Point;
+import app.Rectangle;
 import app.Task;
 import java.util.ArrayList;
 
@@ -108,20 +109,16 @@ public class PanelControl extends GridPanel {
                 true, true);
         addToFirstSet.setOnClick(() -> {
             // если числа введены верно
-            if (!x1Field.hasValidDoubleValue()) {
+            if (!x1Field.hasValidDoubleValue() || !x2Field.hasValidDoubleValue()) {
                 PanelLog.warning("X координата введена неверно");
-            } else if (!y1Field.hasValidDoubleValue())
+            } else if (!y1Field.hasValidDoubleValue() || !y2Field.hasValidDoubleValue())
                 PanelLog.warning("Y координата введена неверно");
-            else {
-                if (!x2Field.hasValidDoubleValue()) {
-                    PanelLog.warning("X координата введена неверно");
-                } else if (!y2Field.hasValidDoubleValue())
-                    PanelLog.warning("Y координата введена неверно");
-            }
-            /*else
-                PanelRendering.task.addPoint(
-                        new Vector2d(xField.doubleValue(), yField.doubleValue()), Point.PointSet.FIRST_SET
-                );*/
+            else
+                PanelRendering.task.addRect(
+                        new Vector2d(x1Field.doubleValue(), y1Field.doubleValue()),
+                        new Vector2d(x2Field.doubleValue(), y2Field.doubleValue()),
+                        Rectangle.RectSet.FIRST_SET
+                );
         });
         buttons.add(addToFirstSet);
         Button addToSecondSet = new Button(
@@ -130,21 +127,16 @@ public class PanelControl extends GridPanel {
                 true, true);
         addToSecondSet.setOnClick(() -> {
             // если числа введены верно
-            if (!x1Field.hasValidDoubleValue()) {
+            if (!x1Field.hasValidDoubleValue() || !x2Field.hasValidDoubleValue()) {
                 PanelLog.warning("X координата введена неверно");
-            } else if (!y1Field.hasValidDoubleValue())
+            } else if (!y1Field.hasValidDoubleValue() || !y2Field.hasValidDoubleValue())
                 PanelLog.warning("Y координата введена неверно");
-            else {
-                if (!x2Field.hasValidDoubleValue()) {
-                    PanelLog.warning("X координата введена неверно");
-                } else if (!y2Field.hasValidDoubleValue())
-                    PanelLog.warning("Y координата введена неверно");
-            }
-            /*else {
-                PanelRendering.task.addPoint(
-                        new Vector2d(xField.doubleValue(), yField.doubleValue()), Point.PointSet.SECOND_SET
+            else
+                PanelRendering.task.addRect(
+                        new Vector2d(x1Field.doubleValue(), y1Field.doubleValue()),
+                        new Vector2d(x2Field.doubleValue(), y2Field.doubleValue()),
+                        Rectangle.RectSet.SECOND_SET
                 );
-            }*/
         });
         buttons.add(addToSecondSet);
         // случайное добавление
@@ -166,7 +158,7 @@ public class PanelControl extends GridPanel {
             if (!cntField.hasValidIntValue()) {
                 PanelLog.warning("кол-во прямоугольников указано неверно");
             } else
-                PanelRendering.task.addRandomPoints(cntField.intValue());
+                PanelRendering.task.addRandomRects(cntField.intValue());
         });
         buttons.add(addPoints);
         // управление
