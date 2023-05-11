@@ -7,10 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.github.humbleui.jwm.MouseButton;
 import io.github.humbleui.skija.*;
 import lombok.Getter;
-import misc.CoordinateSystem2d;
-import misc.CoordinateSystem2i;
-import misc.Vector2d;
-import misc.Vector2i;
+import misc.*;
 import panels.PanelLog;
 
 import java.util.ArrayList;
@@ -73,10 +70,11 @@ public class Task {
      * будет нарисована увеличенная
      */
     private static final int DELIMITER_ORDER = 10;
+
     /**
      * Задача
      *
-     * @param ownCS  СК задачи
+     * @param ownCS СК задачи
      * @param rects массив прямоугольников
      */
     @JsonCreator
@@ -87,6 +85,7 @@ public class Task {
         this.ownCS = ownCS;
         this.rects = rects;
     }
+
     /**
      * Рисование
      *
@@ -112,46 +111,71 @@ public class Task {
         canvas.save();
         // создаём перо
         try (var paint = new Paint()) {
-            for (Rectangle r : rects) {
-                if (!solved) {
-                    paint.setColor(r.getColor());
-                    Vector2i p1 = windowCS.getCoords(r.point1.x, r.point1.y, ownCS);
-                    Vector2i p2 = windowCS.getCoords(r.point2.x, r.point2.y, ownCS);
-
-                    if (p1.x > p2.x) {
-                        int t = p1.x;
-                        p1.x = p2.x;
-                        p2.x = t;
+            if (solved) {
+                for (Rectangle a : rects) {
+                    if (a.rectSet.equals(Rectangle.RectSet.FIRST_SET)){
+                        paint.setColor(Misc.getColor(0xFF, 0x00, 0xFF, 0x00));
+                        Vector2i po1 = windowCS.getCoords(a.point1.x, a.point1.y, ownCS);
+                        Vector2i po2 = windowCS.getCoords(a.point2.x, a.point2.y, ownCS);
+                        if (po1.x > po2.x) {
+                            int t = po1.x;
+                            po1.x = po2.x;
+                            po2.x = t;
+                        }
+                        if (po1.y > po2.y) {
+                            int t = po1.y;
+                            po1.y = po2.y;
+                            po2.y = t;
+                        }
+                        canvas.drawRect(Rect.makeXYWH(po1.x + 1, po1.y + 1, po2.x - po1.x - 1, po2.y - po1.y - 1), paint);
                     }
-                    if (p1.y > p2.y) {
-                        int t = p1.y;
-                        p1.y = p2.y;
-                        p2.y = t;
-                    }
-
-                    Vector2i p3 = new Vector2i(p1.x, p2.y);
-                    Vector2i p4 = new Vector2i(p2.x, p1.y);
-
-                    canvas.drawLine(p1.x, p1.y, p3.x, p3.y, paint);
-                    canvas.drawLine(p1.x, p1.y, p4.x, p4.y, paint);
-                    canvas.drawLine(p2.x, p2.y, p3.x, p3.y, paint);
-                    canvas.drawLine(p2.x, p2.y, p4.x, p4.y, paint);
-
-                } else {
-                    /*if (crossed.contains(p))
-                        paint.setColor(CROSSED_COLOR);
-                    else
-                        paint.setColor(SUBTRACTED_COLOR);*/
                 }
-                /*// y-координату разворачиваем, потому что у СК окна ось y направлена вниз,
-                // а в классическом представлении - вверх
-                Vector2i windowPos = windowCS.getCoords(p.pos.x, p.pos.y, ownCS);
-                // рисуем точку
-                canvas.drawRect(Rect.makeXYWH(windowPos.x - POINT_SIZE, windowPos.y - POINT_SIZE, POINT_SIZE * 2, POINT_SIZE * 2), paint);
-            */}
+                for (Rectangle a : rects) {
+                    if (a.getSetType() == Rectangle.RectSet.SECOND_SET) {
+                        paint.setColor(Misc.getColor(255, 33, 61, 73));
+                        Vector2i po1 = windowCS.getCoords(a.point1.x, a.point1.y, ownCS);
+                        Vector2i po2 = windowCS.getCoords(a.point2.x, a.point2.y, ownCS);
+                        if (po1.x > po2.x) {
+                            int t = po1.x;
+                            po1.x = po2.x;
+                            po2.x = t;
+                        }
+                        if (po1.y > po2.y) {
+                            int t = po1.y;
+                            po1.y = po2.y;
+                            po2.y = t;
+                        }
+                        canvas.drawRect(Rect.makeXYWH(po1.x + 1, po1.y + 1, po2.x - po1.x - 1, po2.y - po1.y - 1), paint);
+                    }
+                }
+            }
+            for (Rectangle r : rects) {
+                paint.setColor(r.getColor());
+                Vector2i p1 = windowCS.getCoords(r.point1.x, r.point1.y, ownCS);
+                Vector2i p2 = windowCS.getCoords(r.point2.x, r.point2.y, ownCS);
+                if (p1.x > p2.x) {
+                    int t = p1.x;
+                    p1.x = p2.x;
+                    p2.x = t;
+                }
+                if (p1.y > p2.y) {
+                    int t = p1.y;
+                    p1.y = p2.y;
+                    p2.y = t;
+                }
+                Vector2i p3 = new Vector2i(p1.x, p2.y);
+                Vector2i p4 = new Vector2i(p2.x, p1.y);
+                canvas.drawLine(p1.x, p1.y, p3.x, p3.y, paint);
+                canvas.drawLine(p1.x, p1.y, p4.x, p4.y, paint);
+                canvas.drawLine(p2.x, p2.y, p3.x, p3.y, paint);
+                canvas.drawLine(p2.x, p2.y, p4.x, p4.y, paint);
+
+            }
         }
+        renderGrid(canvas, windowCS);
         canvas.restore();
     }
+
     /**
      * Рисование сетки
      *
@@ -194,16 +218,21 @@ public class Task {
     /**
      * Добавить точку
      *
-     * @param point1      положение
-     * @param point2      положение
+     * @param point1  положение
+     * @param point2  положение
      * @param rectSet множество
      */
     public void addRect(Vector2d point1, Vector2d point2, Rectangle.RectSet rectSet) {
         solved = false;
         Rectangle newRect = new Rectangle(point1, point2, rectSet);
-        rects.add(newRect);
-        PanelLog.info("Прямоугольник " + newRect + " добавлен в " + newRect.getSetName());
+        if ((Math.abs(point1.x - point2.x) < 0.1 || (Math.abs(point1.y - point2.y) < 0.1)))
+            PanelLog.info("Задаваемый прямоугольник слишком узкий!");
+        else {
+            rects.add(newRect);
+            PanelLog.info("Прямоугольник " + newRect + " добавлен в " + newRect.getSetName());
+        }
     }
+
     /**
      * Клик мыши по пространству задачи
      *
@@ -217,20 +246,19 @@ public class Task {
         // если левая кнопка мыши, добавляем в первое множество
         if (mouseButton.equals(MouseButton.PRIMARY)) {
             LMBcount++;
-            if (LMBcount % 2 != 0){
+            if (LMBcount % 2 != 0) {
                 LMBtemp = taskPos;
-            }
-            else addRect(LMBtemp, taskPos, Rectangle.RectSet.FIRST_SET);
+            } else addRect(LMBtemp, taskPos, Rectangle.RectSet.FIRST_SET);
             // если правая, то во второе
         } else if (mouseButton.equals(MouseButton.SECONDARY)) {
             RMBcount++;
-            if (RMBcount % 2 != 0){
+            if (RMBcount % 2 != 0) {
                 RMBtemp = taskPos;
-            }
-            else addRect(RMBtemp, taskPos, Rectangle.RectSet.SECOND_SET);
+            } else addRect(RMBtemp, taskPos, Rectangle.RectSet.SECOND_SET);
             // если правая, то во второе
         }
     }
+
     /**
      * Добавить случайные точки
      *
@@ -262,6 +290,7 @@ public class Task {
         }
 
     }
+
     /**
      * Очистить задачу
      */
@@ -269,6 +298,7 @@ public class Task {
         rects.clear();
         solved = false;
     }
+
     /**
      * Решить задачу
      */
@@ -276,12 +306,14 @@ public class Task {
         // задача решена
         solved = true;
     }
+
     /**
      * Отмена решения задачи
      */
     public void cancel() {
         solved = false;
     }
+
     /**
      * проверка, решена ли задача
      *
@@ -290,6 +322,7 @@ public class Task {
     public boolean isSolved() {
         return solved;
     }
+
     /**
      * Масштабирование области просмотра задачи
      *
@@ -303,6 +336,7 @@ public class Task {
         // выполняем масштабирование
         ownCS.scale(1 + delta * WHEEL_SENSITIVE, realCenter);
     }
+
     /**
      * Получить положение курсора мыши в СК задачи
      *
@@ -315,6 +349,7 @@ public class Task {
     public Vector2d getRealPos(int x, int y, CoordinateSystem2i windowCS) {
         return ownCS.getCoords(x, y, windowCS);
     }
+
     /**
      * Рисование курсора мыши
      *
