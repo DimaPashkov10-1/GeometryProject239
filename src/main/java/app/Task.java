@@ -44,11 +44,6 @@ public class Task {
     @Getter
     private final CoordinateSystem2d ownCS;
     /**
-     * Список точек
-     */
-    @Getter
-    private final ArrayList<Point> points;
-    /**
      * Список прямоугольников
      */
     @Getter
@@ -66,18 +61,6 @@ public class Task {
      */
     private boolean solved;
     /**
-     * Список точек в пересечении
-     */
-    @Getter
-    @JsonIgnore
-    private final ArrayList<Point> crossed;
-    /**
-     * Список точек в разности
-     */
-    @Getter
-    @JsonIgnore
-    private final ArrayList<Point> single;
-    /**
      * Порядок разделителя сетки, т.е. раз в сколько отсечек
      * будет нарисована увеличенная
      */
@@ -86,19 +69,15 @@ public class Task {
      * Задача
      *
      * @param ownCS  СК задачи
-     * @param points массив точек
+     * @param rects массив прямоугольников
      */
     @JsonCreator
     public Task(
             @JsonProperty("ownCS") CoordinateSystem2d ownCS,
-            @JsonProperty("points") ArrayList<Point> points,
             @JsonProperty("rects") ArrayList<Rectangle> rects
     ) {
         this.ownCS = ownCS;
-        this.points = points;
         this.rects = rects;
-        this.crossed = new ArrayList<>();
-        this.single = new ArrayList<>();
     }
     /**
      * Рисование
@@ -125,21 +104,43 @@ public class Task {
         canvas.save();
         // создаём перо
         try (var paint = new Paint()) {
-            for (Point p : points) {
+            for (Rectangle r : rects) {
                 if (!solved) {
-                    paint.setColor(p.getColor());
+                    paint.setColor(r.getColor());
+                    Vector2i p1 = windowCS.getCoords(r.point1.x, r.point1.y, ownCS);
+                    Vector2i p2 = windowCS.getCoords(r.point2.x, r.point2.y, ownCS);
+
+                    if (p1.x > p2.x) {
+                        int t = p1.x;
+                        p1.x = p2.x;
+                        p2.x = t;
+                    }
+                    if (p1.y > p2.y) {
+                        int t = p1.y;
+                        p1.y = p2.y;
+                        p2.y = t;
+                    }
+
+                    Vector2i p3 = new Vector2i(p1.x, p2.y);
+                    Vector2i p4 = new Vector2i(p2.x, p1.y);
+
+                    canvas.drawLine(p1.x, p1.y, p3.x, p3.y, paint);
+                    canvas.drawLine(p1.x, p1.y, p4.x, p4.y, paint);
+                    canvas.drawLine(p2.x, p2.y, p3.x, p3.y, paint);
+                    canvas.drawLine(p2.x, p2.y, p4.x, p4.y, paint);
+
                 } else {
-                    if (crossed.contains(p))
+                    /*if (crossed.contains(p))
                         paint.setColor(CROSSED_COLOR);
                     else
-                        paint.setColor(SUBTRACTED_COLOR);
+                        paint.setColor(SUBTRACTED_COLOR);*/
                 }
-                // y-координату разворачиваем, потому что у СК окна ось y направлена вниз,
+                /*// y-координату разворачиваем, потому что у СК окна ось y направлена вниз,
                 // а в классическом представлении - вверх
                 Vector2i windowPos = windowCS.getCoords(p.pos.x, p.pos.y, ownCS);
                 // рисуем точку
                 canvas.drawRect(Rect.makeXYWH(windowPos.x - POINT_SIZE, windowPos.y - POINT_SIZE, POINT_SIZE * 2, POINT_SIZE * 2), paint);
-            }
+            */}
         }
         canvas.restore();
     }
@@ -185,17 +186,16 @@ public class Task {
     /**
      * Добавить точку
      *
-     * @param pos      положение
-     * @param pointSet множество
+     * @param point1      положение
+     * @param point2      положение
+     * @param rectSet множество
      */
-    public void addPoint(Vector2d pos, Point.PointSet pointSet) {
+    public void addRect(Vector2d point1, Vector2d point2, Rectangle.RectSet rectSet) {
         solved = false;
-        Point newPoint = new Point(pos, pointSet);
-        points.add(newPoint);
-        PanelLog.info("точка " + newPoint + " добавлена в " + newPoint.getSetName());
+        Rectangle newRect = new Rectangle(point1, point2, rectSet);
+        rects.add(newRect);
+        PanelLog.info("Прямоугольник " + newRect + " добавлен в " + newRect.getSetName());
     }
-
-
     /**
      * Клик мыши по пространству задачи
      *
@@ -206,13 +206,13 @@ public class Task {
         if (lastWindowCS == null) return;
         // получаем положение на экране
         Vector2d taskPos = ownCS.getCoords(pos, lastWindowCS);
-        // если левая кнопка мыши, добавляем в первое множество
+        /*// если левая кнопка мыши, добавляем в первое множество
         if (mouseButton.equals(MouseButton.PRIMARY)) {
             addPoint(taskPos, Point.PointSet.FIRST_SET);
             // если правая, то во второе
         } else if (mouseButton.equals(MouseButton.SECONDARY)) {
             addPoint(taskPos, Point.PointSet.SECOND_SET);
-        }
+        }*/
     }
     /**
      * Добавить случайные точки
@@ -236,10 +236,10 @@ public class Task {
             // получаем координаты в СК задачи
             Vector2d pos = ownCS.getCoords(gridPos, addGrid);
             // сработает примерно в половине случаев
-            if (ThreadLocalRandom.current().nextBoolean())
+            /*if (ThreadLocalRandom.current().nextBoolean())
                 addPoint(pos, Point.PointSet.FIRST_SET);
             else
-                addPoint(pos, Point.PointSet.SECOND_SET);
+                addPoint(pos, Point.PointSet.SECOND_SET);*/
         }
 
     }
@@ -247,38 +247,13 @@ public class Task {
      * Очистить задачу
      */
     public void clear() {
-        points.clear();
+        rects.clear();
         solved = false;
     }
     /**
      * Решить задачу
      */
     public void solve() {
-        // очищаем списки
-        crossed.clear();
-        single.clear();
-
-        // перебираем пары точек
-        for (int i = 0; i < points.size(); i++) {
-            for (int j = i + 1; j < points.size(); j++) {
-                // сохраняем точки
-                Point a = points.get(i);
-                Point b = points.get(j);
-                // если точки совпадают по положению
-                if (a.pos.equals(b.pos) && !a.pointSet.equals(b.pointSet)) {
-                    if (!crossed.contains(a)){
-                        crossed.add(a);
-                        crossed.add(b);
-                    }
-                }
-            }
-        }
-
-        /// добавляем вс
-        for (Point point : points)
-            if (!crossed.contains(point))
-                single.add(point);
-
         // задача решена
         solved = true;
     }
