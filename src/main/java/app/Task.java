@@ -49,6 +49,11 @@ public class Task {
     @Getter
     private final ArrayList<Point> points;
     /**
+     * Список прямоугольников
+     */
+    @Getter
+    private final ArrayList<Rectangle> rects;
+    /**
      * Размер точки
      */
     private static final int POINT_SIZE = 3;
@@ -86,10 +91,12 @@ public class Task {
     @JsonCreator
     public Task(
             @JsonProperty("ownCS") CoordinateSystem2d ownCS,
-            @JsonProperty("points") ArrayList<Point> points
+            @JsonProperty("points") ArrayList<Point> points,
+            @JsonProperty("rects") ArrayList<Rectangle> rects
     ) {
         this.ownCS = ownCS;
         this.points = points;
+        this.rects = rects;
         this.crossed = new ArrayList<>();
         this.single = new ArrayList<>();
     }

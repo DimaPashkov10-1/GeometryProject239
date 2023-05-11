@@ -59,7 +59,7 @@ public class PanelRendering extends GridPanel {
         );
 
         // создаём задачу без точек
-        task = new Task(cs, new ArrayList<>());
+        task = new Task(cs, new ArrayList<>(), new ArrayList<>());
         // добавляем в нё 10 случайных
         task.addRandomPoints(10);
     }
