@@ -36,7 +36,9 @@ public class Task {
      */
     private int LMBcount = 0;
     private int RMBcount = 0;
-
+    /**
+     * Запоминание первого клика мыши из двух
+     */
     private Vector2d LMBtemp = null;
     private Vector2d RMBtemp = null;
     /**
@@ -113,10 +115,12 @@ public class Task {
         try (var paint = new Paint()) {
             if (solved) {
                 for (Rectangle a : rects) {
+                    //перебираем все прямоугольники из первого множества и закрашиваем их
                     if (a.rectSet.equals(Rectangle.RectSet.FIRST_SET)){
                         paint.setColor(Misc.getColor(0xFF, 0x00, 0xFF, 0x00));
                         Vector2i po1 = windowCS.getCoords(a.point1.x, a.point1.y, ownCS);
                         Vector2i po2 = windowCS.getCoords(a.point2.x, a.point2.y, ownCS);
+                        //для корректного закрашивания устанавливаем point1 как левый верхний угол, а point2 как правый нижний
                         if (po1.x > po2.x) {
                             int t = po1.x;
                             po1.x = po2.x;
@@ -130,8 +134,10 @@ public class Task {
                         canvas.drawRect(Rect.makeXYWH(po1.x + 1, po1.y + 1, po2.x - po1.x - 1, po2.y - po1.y - 1), paint);
                     }
                 }
+                //перебираем все прямоугольники из второго множества и закрашиваем их цветом, совпадающим с цветом фона
+                //формально - убираем заливку
                 for (Rectangle a : rects) {
-                    if (a.getSetType() == Rectangle.RectSet.SECOND_SET) {
+                    if (a.rectSet.equals(Rectangle.RectSet.SECOND_SET)) {
                         paint.setColor(Misc.getColor(255, 33, 61, 73));
                         Vector2i po1 = windowCS.getCoords(a.point1.x, a.point1.y, ownCS);
                         Vector2i po2 = windowCS.getCoords(a.point2.x, a.point2.y, ownCS);
@@ -148,7 +154,20 @@ public class Task {
                         canvas.drawRect(Rect.makeXYWH(po1.x + 1, po1.y + 1, po2.x - po1.x - 1, po2.y - po1.y - 1), paint);
                     }
                 }
+                /*
+                метод рисования нужного множества по точкам, сильно снижает производительность
+                for (int i = 0; i < windowCS.getCoords(10, 10, ownCS).x; i++) {
+                    for (int j = 0; j < windowCS.getCoords(10, 10, ownCS).y; j++) {
+                        Vector2i vi = new Vector2i(i,j);
+                        Point p = new Point(ownCS.getCoords(vi.x, vi.y, windowCS));
+                        if (p.isComplement(rects)) {
+                            canvas.drawRect(Rect.makeXYWH(i,j,1,1),paint);
+                            paint.setColor(Misc.getColor(0xFF, 0x00, 0xFF, 0x00));
+                        }
+                    }
+                }*/
             }
+            //рисование всех прямоугольников
             for (Rectangle r : rects) {
                 paint.setColor(r.getColor());
                 Vector2i p1 = windowCS.getCoords(r.point1.x, r.point1.y, ownCS);
@@ -169,7 +188,6 @@ public class Task {
                 canvas.drawLine(p1.x, p1.y, p4.x, p4.y, paint);
                 canvas.drawLine(p2.x, p2.y, p3.x, p3.y, paint);
                 canvas.drawLine(p2.x, p2.y, p4.x, p4.y, paint);
-
             }
         }
         renderGrid(canvas, windowCS);
@@ -225,6 +243,7 @@ public class Task {
     public void addRect(Vector2d point1, Vector2d point2, Rectangle.RectSet rectSet) {
         solved = false;
         Rectangle newRect = new Rectangle(point1, point2, rectSet);
+        //если прямоугольник очень маленький, его рисование может привести к ошибке
         if ((Math.abs(point1.x - point2.x) < 0.1 || (Math.abs(point1.y - point2.y) < 0.1)))
             PanelLog.info("Задаваемый прямоугольник слишком узкий!");
         else {
@@ -304,6 +323,7 @@ public class Task {
      */
     public void solve() {
         // задача решена
+        // ответ дается в графическом виде, его отображение реализовано в методе paint
         solved = true;
     }
 

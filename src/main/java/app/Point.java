@@ -6,30 +6,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import misc.Misc;
 import misc.Vector2d;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 /**
  * Класс точки
  */
 public class Point {
-    /**
-     * Множества
-     */
-    public enum PointSet {
-        /**
-         * Первое
-         */
-        FIRST_SET,
-        /**
-         * Второе
-         */
-        SECOND_SET
-    }
-
-    /**
-     * Множество, которому принадлежит точка
-     */
-    protected final PointSet pointSet;
     /**
      * Координаты точки
      */
@@ -39,24 +22,10 @@ public class Point {
      * Конструктор точки
      *
      * @param pos     положение точки
-     * @param setType множество, которому она принадлежит
      */
     @JsonCreator
-    public Point(@JsonProperty("pos") Vector2d pos, @JsonProperty("setType") PointSet setType) {
+    public Point(@JsonProperty("pos") Vector2d pos) {
         this.pos = pos;
-        this.pointSet = setType;
-    }
-    /**
-     * Получить цвет точки по её множеству
-     *
-     * @return цвет точки
-     */
-    @JsonIgnore
-    public int getColor() {
-        return switch (pointSet) {
-            case FIRST_SET -> Misc.getColor(0xCC, 0x00, 0x00, 0xFF);
-            case SECOND_SET -> Misc.getColor(0xCC, 0x00, 0xFF, 0x0);
-        };
     }
 
     /**
@@ -70,29 +39,6 @@ public class Point {
     }
 
     /**
-     * Получить множество
-     *
-     * @return множество
-     */
-    public PointSet getSetType() {
-        return pointSet;
-    }
-
-
-    /**
-     * Получить название множества
-     *
-     * @return название множества
-     */
-    @JsonIgnore
-    public String getSetName() {
-        return switch (pointSet) {
-            case FIRST_SET -> "Первое множество";
-            case SECOND_SET -> "Второе множество";
-        };
-    }
-
-    /**
      * Строковое представление объекта
      *
      * @return строковое представление объекта
@@ -100,8 +46,7 @@ public class Point {
     @Override
     public String toString() {
         return "Point{" +
-                "pointSetType=" + pointSet +
-                ", pos=" + pos +
+                "pos=" + pos +
                 '}';
     }
 
@@ -119,7 +64,7 @@ public class Point {
         if (o == null || getClass() != o.getClass()) return false;
         // приводим переданный в параметрах объект к текущему классу
         Point point = (Point) o;
-        return pointSet.equals(point.pointSet) && Objects.equals(pos, point.pos);
+        return Objects.equals(pos, point.pos);
     }
 
     /**
@@ -129,6 +74,45 @@ public class Point {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(pointSet, pos);
+        return Objects.hash(pos);
+    }
+    /**
+     * проверка, находится ли точка внутри прямоугольника
+     *
+     * @return флаг
+     */
+    public boolean isInRect (Rectangle r) {
+        boolean flag = false;
+        if (r.point1.x > r.point2.x) {
+            double t = r.point1.x;
+            r.point1.x = r.point2.x;
+            r.point2.x = t;
+        }
+        if (r.point1.y > r.point2.y) {
+            double t = r.point1.y;
+            r.point1.y = r.point2.y;
+            r.point2.y = t;
+        }
+        if (this.pos.x >= r.point1.x && this.pos.x <= r.point2.x &&
+                this.pos.y >= r.point1.y && this.pos.y <= r.point2.y)
+            flag = true;
+        return flag;
+    }
+    /**
+     * проверка, находится ли точка в разности
+     *
+     * @return флаг
+     */
+    public boolean isComplement (ArrayList<Rectangle> rects) {
+        boolean flag = false;
+        for (Rectangle r : rects) {
+            if (this.isInRect(r) && r.rectSet.equals(Rectangle.RectSet.FIRST_SET))
+                flag = true;
+            if (this.isInRect(r) && r.rectSet.equals(Rectangle.RectSet.SECOND_SET)) {
+                flag = false;
+                break;
+            }
+        }
+        return flag;
     }
 }
